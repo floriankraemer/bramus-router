@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 /**
  * @author      Bram(us) Van Damme <bramus@bram.us>
@@ -10,42 +11,42 @@ namespace Bramus\Router;
 /**
  * Class Router.
  */
-class Router
+class Router implements RouterInterface
 {
     /**
      * @var array The route patterns and their handling functions
      */
-    private $afterRoutes = array();
+    protected array $afterRoutes = array();
 
     /**
      * @var array The before middleware route patterns and their handling functions
      */
-    private $beforeRoutes = array();
+    protected array $beforeRoutes = array();
 
     /**
      * @var array [object|callable] The function to be executed when no route has been matched
      */
-    protected $notFoundCallback = [];
+    protected array $notFoundCallback = [];
 
     /**
      * @var string Current base route, used for (sub)route mounting
      */
-    private $baseRoute = '';
+    protected string $baseRoute = '';
 
     /**
      * @var string The Request Method that needs to be handled
      */
-    private $requestedMethod = '';
+    protected string $requestedMethod = '';
 
     /**
      * @var string The Server Base Path for Router Execution
      */
-    private $serverBasePath;
+    protected string $serverBasePath = '/';
 
     /**
      * @var string Default Controllers Namespace
      */
-    private $namespace = '';
+    protected string $namespace = '';
 
     /**
      * Store a before middleware route and a handling function to be executed when accessed using one of the specified methods.
@@ -70,12 +71,18 @@ class Router
     /**
      * Store a route and a handling function to be executed when accessed using one of the specified methods.
      *
-     * @param string          $methods Allowed methods, | delimited
+     * @param string|Route          $methods Allowed methods, | delimited
      * @param string          $pattern A route pattern such as /about/system
      * @param object|callable $fn      The handling function to be executed
      */
     public function match($methods, $pattern, $fn)
     {
+        if ($methods instanceof Route) {
+            $methods = implode('|', $methods->getMethods());
+            $pattern = $methods->getPattern();
+            $fn = $methods->getHandler();
+        }
+
         $pattern = $this->baseRoute . '/' . trim($pattern, '/');
         $pattern = $this->baseRoute ? rtrim($pattern, '/') : $pattern;
 
@@ -92,6 +99,7 @@ class Router
      *
      * @param string          $pattern A route pattern such as /about/system
      * @param object|callable $fn      The handling function to be executed
+     * @deprecated Use the RouteFactory
      */
     public function all($pattern, $fn)
     {
@@ -103,6 +111,7 @@ class Router
      *
      * @param string          $pattern A route pattern such as /about/system
      * @param object|callable $fn      The handling function to be executed
+     * @deprecated Use the RouteFactory
      */
     public function get($pattern, $fn)
     {
@@ -114,6 +123,7 @@ class Router
      *
      * @param string          $pattern A route pattern such as /about/system
      * @param object|callable $fn      The handling function to be executed
+     * @deprecated Use the RouteFactory
      */
     public function post($pattern, $fn)
     {
@@ -136,6 +146,7 @@ class Router
      *
      * @param string          $pattern A route pattern such as /about/system
      * @param object|callable $fn      The handling function to be executed
+     * @deprecated Use the RouteFactory
      */
     public function delete($pattern, $fn)
     {
@@ -147,6 +158,7 @@ class Router
      *
      * @param string          $pattern A route pattern such as /about/system
      * @param object|callable $fn      The handling function to be executed
+     * @deprecated Use the RouteFactory
      */
     public function put($pattern, $fn)
     {
@@ -158,6 +170,7 @@ class Router
      *
      * @param string          $pattern A route pattern such as /about/system
      * @param object|callable $fn      The handling function to be executed
+     * @deprecated Use the RouteFactory
      */
     public function options($pattern, $fn)
     {
@@ -206,7 +219,7 @@ class Router
 
         // Method getallheaders() not available or went wrong: manually extract 'm
         foreach ($_SERVER as $name => $value) {
-            if ((substr($name, 0, 5) == 'HTTP_') || ($name == 'CONTENT_TYPE') || ($name == 'CONTENT_LENGTH')) {
+            if ((substr($name, 0, 5) === 'HTTP_') || ($name === 'CONTENT_TYPE') || ($name === 'CONTENT_LENGTH')) {
                 $headers[str_replace(array(' ', 'Http'), array('-', 'HTTP'), ucwords(strtolower(str_replace('_', ' ', substr($name, 5)))))] = $value;
             }
         }
@@ -226,13 +239,13 @@ class Router
 
         // If it's a HEAD request override it to being GET and prevent any output, as per HTTP Specification
         // @url http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html#sec9.4
-        if ($_SERVER['REQUEST_METHOD'] == 'HEAD') {
+        if ($_SERVER['REQUEST_METHOD'] === 'HEAD') {
             ob_start();
             $method = 'GET';
         }
 
         // If it's a POST request, check for a method override header
-        elseif ($_SERVER['REQUEST_METHOD'] == 'POST') {
+        elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $headers = $this->getRequestHeaders();
             if (isset($headers['X-HTTP-Method-Override']) && in_array($headers['X-HTTP-Method-Override'], array('PUT', 'DELETE', 'PATCH'))) {
                 $method = $headers['X-HTTP-Method-Override'];
@@ -298,7 +311,7 @@ class Router
         }
 
         // If it originally was a HEAD request, clean up after ourselves by emptying the output buffer
-        if ($_SERVER['REQUEST_METHOD'] == 'HEAD') {
+        if ($_SERVER['REQUEST_METHOD'] === RouteInterface::HEAD_METHOD) {
             ob_end_clean();
         }
 
@@ -368,9 +381,9 @@ class Router
               }
             }
         }
-        if (($numHandled == 0) && (isset($this->notFoundCallback['/']))) {
+        if (($numHandled === 0) && (isset($this->notFoundCallback['/']))) {
             $this->invoke($this->notFoundCallback['/']);
-        } elseif ($numHandled == 0) {
+        } elseif ($numHandled === 0) {
             header($_SERVER['SERVER_PROTOCOL'] . ' 404 Not Found');
         }
     }
@@ -386,7 +399,7 @@ class Router
     *
     * @return bool -> is match yes/no
     */
-    private function patternMatches($pattern, $uri, &$matches, $flags)
+    protected function patternMatches($pattern, $uri, &$matches, $flags)
     {
       // Replace all curly braces matches {} into word patterns (like Laravel)
       $pattern = preg_replace('/\/{(.*?)}/', '/(.*?)', $pattern);
@@ -403,7 +416,7 @@ class Router
      *
      * @return int The number of routes handled
      */
-    private function handle($routes, $quitAfterRun = false)
+    protected function handle($routes, $quitAfterRun = false)
     {
         // Counter to keep track of the number of routes we've handled
         $numHandled = 0;
@@ -452,14 +465,14 @@ class Router
         return $numHandled;
     }
 
-    private function invoke($fn, $params = array())
+    protected function invoke($fn, $params = array())
     {
         if (is_callable($fn)) {
             call_user_func_array($fn, $params);
         }
 
         // If not, check the existence of special parameters
-        elseif (stripos($fn, '@') !== false) {
+        elseif (strpos($fn, '@') !== false) {
             // Explode segments of given route
             list($controller, $method) = explode('@', $fn);
 
@@ -527,8 +540,9 @@ class Router
      * @see https://github.com/bramus/router/issues/82#issuecomment-466956078
      *
      * @param string
+     * @return void
      */
-    public function setBasePath($serverBasePath)
+    public function setBasePath(string $serverBasePath): void
     {
         $this->serverBasePath = $serverBasePath;
     }
