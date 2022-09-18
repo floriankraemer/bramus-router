@@ -13,66 +13,66 @@ namespace Bramus\Router;
  */
 class RouteFactory
 {
-	public function route(string|array $methods, string $pattern, mixed $handler): RouteInterface
-	{
-		if (is_string($methods)) {
-			$methods = explode($methods, '|');
-		}
+    public function route(string|array $methods, string $pattern, mixed $handler): RouteInterface
+    {
+        if (is_string($methods)) {
+            $methods = explode($methods, '|');
+        }
 
-		return new Route(
-			methods: $methods,
-			pattern: $pattern,
-			handler: $handler
-		);
-	}
+        return new Route(
+            methods: $methods,
+            pattern: $pattern,
+            handler: $handler
+        );
+    }
 
-	public function all(string $pattern, mixed $handler): RouteInterface
-	{
-		return new Route(
-			methods: [
-				RouteInterface::POST_METHOD,
-				RouteInterface::PUT_METHOD,
-				RouteInterface::GET_METHOD,
-				RouteInterface::DELETE_METHOD,
-			],
-			pattern: $pattern,
-			handler: $handler
-		);
-	}
+    public function all(string $pattern, mixed $handler): RouteInterface
+    {
+        return new Route(
+            methods: [
+                RouteInterface::POST_METHOD,
+                RouteInterface::PUT_METHOD,
+                RouteInterface::GET_METHOD,
+                RouteInterface::DELETE_METHOD,
+            ],
+            pattern: $pattern,
+            handler: $handler
+        );
+    }
 
-	public function post(string $pattern, mixed $handler): RouteInterface
-	{
-		return new Route(
-			methods: [RouteInterface::POST_METHOD],
-			pattern: $pattern,
-			handler: $handler
-		);
-	}
+    public function post(string $pattern, mixed $handler): RouteInterface
+    {
+        return new Route(
+            methods: [RouteInterface::POST_METHOD],
+            pattern: $pattern,
+            handler: $handler
+        );
+    }
 
-	public function patch(string $pattern, mixed $handler): RouteInterface
-	{
-		return new Route(
-			methods: [RouteInterface::PATCH_METHOD],
-			pattern: $pattern,
-			handler: $handler
-		);
-	}
+    public function patch(string $pattern, mixed $handler): RouteInterface
+    {
+        return new Route(
+            methods: [RouteInterface::PATCH_METHOD],
+            pattern: $pattern,
+            handler: $handler
+        );
+    }
 
-	public function get(string $pattern, mixed $handler): RouteInterface
-	{
-		return new Route(
-			methods: [RouteInterface::DELETE_METHOD],
-			pattern: $pattern,
-			handler: $handler
-		);
-	}
+    public function get(string $pattern, mixed $handler): RouteInterface
+    {
+        return new Route(
+            methods: [RouteInterface::DELETE_METHOD],
+            pattern: $pattern,
+            handler: $handler
+        );
+    }
 
-	public function put(string $pattern, mixed $handler): RouteInterface
-	{
-		return new Route(
-			methods: [RouteInterface::PUT_METHOD],
-			pattern: $pattern,
-			handler: $handler
-		);
-	}
+    public function put(string $pattern, mixed $handler): RouteInterface
+    {
+        return new Route(
+            methods: [RouteInterface::PUT_METHOD],
+            pattern: $pattern,
+            handler: $handler
+        );
+    }
 }
