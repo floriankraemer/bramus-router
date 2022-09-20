@@ -1,4 +1,5 @@
 <?php
+
 declare(strict_types=1);
 
 /**
@@ -11,7 +12,7 @@ namespace Bramus\Router;
 /**
  * Route Factory.
  */
-class RouteFactory
+class RouteFactory implements RouteFactoryInterface
 {
     public function route(string|array $methods, string $pattern, mixed $handler): RouteInterface
     {

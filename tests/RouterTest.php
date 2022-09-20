@@ -2,7 +2,9 @@
 
 namespace {
 
-	use Bramus\Router\Router;
+    use Bramus\Router\Result;
+    use Bramus\Router\RouteInterface;
+    use Bramus\Router\Router;
 	use PHPUnit\Framework\TestCase;
 
 	class Handler
@@ -918,6 +920,19 @@ namespace {
 
             // Cleanup
             ob_end_clean();
+        }
+
+        public function testDispatch()
+        {
+            // Create Router
+            $router = new Router();
+            $router->get('/test', 'test');
+
+            $_SERVER['REQUEST_URI'] = '/test';
+            $result = $router->dispatch();
+            $this->assertInstanceOf(Result::class, $result);
+            $this->assertTrue($result->matched());
+            $this->assertEquals($result->getRoute()->getPattern(), '/test');
         }
     }
 }
